@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:timycampus/Pages/login_screen.dart';
+import 'package:timycampus/Pages/tugas7.dart';
+import 'package:timycampus/Pages/latihan_bottom_navigator.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +16,7 @@ class MyApp extends StatelessWidget {
       // title: 'Flutter Demo',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      home: const Tugas7(), // Ganti dengan halaman yang ingin ditampilkan pertama kali
     );
   }
 }
