@@ -1,4 +1,3 @@
-
 // Mengimport package Flutter Material.
 // Package ini digunakan untuk membuat tampilan aplikasi.
 import 'package:flutter/material.dart';
@@ -15,7 +14,7 @@ import 'package:path/path.dart';
 class User {
 
   // ID user.
-  // Tipe int dan boleh kosong karena ID akan dibuat otomatis oleh database.
+  // ID bersifat nullable karena akan dibuat otomatis oleh database.
   int? id;
 
   // Menyimpan nama user.
@@ -44,6 +43,7 @@ class User {
     required this.asalKota,
   });
 
+
   // Method toMap digunakan untuk mengubah object User
   // menjadi Map agar dapat disimpan ke database SQLite.
   Map<String, dynamic> toMap() {
@@ -51,8 +51,7 @@ class User {
     // Mengembalikan data dalam bentuk Map.
     return {
 
-      // ID tidak wajib dikirim ketika insert
-      // karena database akan membuat ID secara otomatis.
+      // ID user.
       'id': id,
 
       // Menyimpan nama ke kolom nama.
@@ -71,6 +70,7 @@ class User {
       'asal_kota': asalKota,
     };
   }
+
 
   // Method fromMap digunakan untuk mengubah data dari database
   // menjadi object User.
@@ -108,12 +108,11 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
 
   // Constructor private.
-  // Tanda "_" membuat constructor hanya bisa digunakan
-  // dari dalam class ini.
   DatabaseHelper._init();
 
   // Variabel untuk menyimpan object database.
   Database? _database;
+
 
   // Getter database digunakan untuk mendapatkan database.
   Future<Database> get database async {
@@ -131,6 +130,8 @@ class DatabaseHelper {
     // Mengembalikan database.
     return _database!;
   }
+
+
   // Method untuk membuat atau membuka database.
   Future<Database> _initDatabase() async {
 
@@ -154,6 +155,7 @@ class DatabaseHelper {
       onCreate: _createDatabase,
     );
   }
+
 
   // Method untuk membuat tabel users.
   Future<void> _createDatabase(
@@ -179,8 +181,10 @@ class DatabaseHelper {
     // Mengambil database.
     final db = await instance.database;
 
-    // Memasukkan data User ke tabel users.
+    // Memasukkan object User ke tabel users.
     return await db.insert(
+
+      // Nama tabel.
       'users',
 
       // Mengubah object User menjadi Map.
@@ -200,6 +204,8 @@ class DatabaseHelper {
 
     // Mengambil semua data dari tabel users.
     final result = await db.query(
+
+      // Nama tabel.
       'users',
 
       // Mengurutkan data berdasarkan ID terbaru.
@@ -210,44 +216,99 @@ class DatabaseHelper {
     // menjadi object User.
     return result.map((map) => User.fromMap(map)).toList();
   }
+
+  // Method untuk mengubah data user.
+  Future<int> updateUser(User user) async {
+
+    // Mengambil database.
+    final db = await instance.database;
+
+    // Melakukan update pada tabel users.
+    return await db.update(
+
+      // Nama tabel.
+      'users',
+
+      // Data baru yang akan disimpan.
+      user.toMap(),
+
+      // Menentukan data berdasarkan ID.
+      // Hanya user dengan ID yang sesuai yang akan diubah.
+      where: 'id = ?',
+
+      // Mengirim ID user sebagai parameter.
+      whereArgs: [user.id],
+    );
+  }
+  // Method untuk menghapus data user.
+  Future<int> deleteUser(int id) async {
+
+    // Mengambil database.
+    final db = await instance.database;
+
+    // Menghapus data dari tabel users.
+    return await db.delete(
+
+      // Nama tabel.
+      'users',
+
+      // Menentukan data yang akan dihapus berdasarkan ID.
+      where: 'id = ?',
+
+      // Mengirim ID user sebagai parameter.
+      whereArgs: [id],
+    );
+  }
 }
 
-// Tugas12 merupakan halaman utama tugas ini.
-class Tugas12 extends StatefulWidget {
+// Tugas13 merupakan halaman utama tugas ini.
+class Tugas13 extends StatefulWidget {
 
-  // Constructor Tugas12.
-  const Tugas12({super.key});
+  // Constructor Tugas13.
+  const Tugas13({super.key});
 
-
-  // Membuat State untuk Tugas12.
+  // Membuat State untuk Tugas13.
   @override
-  State<Tugas12> createState() => _Tugas12State();
+  State<Tugas13> createState() => _Tugas13State();
 }
 
-class _Tugas12State extends State<Tugas12> {
+
+// State dari Tugas13.
+class _Tugas13State extends State<Tugas13> {
 
   // Controller untuk input nama.
-  final TextEditingController namaController = TextEditingController();
+  final TextEditingController namaController =
+      TextEditingController();
 
   // Controller untuk input email.
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController emailController =
+      TextEditingController();
 
   // Controller untuk input nomor HP.
-  final TextEditingController nomorHpController = TextEditingController();
+  final TextEditingController nomorHpController =
+      TextEditingController();
 
   // Controller untuk input password.
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController passwordController =
+      TextEditingController();
 
   // Controller untuk input asal kota.
-  final TextEditingController asalKotaController = TextEditingController();
+  final TextEditingController asalKotaController =
+      TextEditingController();
 
 
   // GlobalKey digunakan untuk mengontrol Form.
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>();
 
 
   // Future digunakan untuk mengambil data user dari database.
   late Future<List<User>> usersFuture;
+
+
+  // Variabel untuk menyimpan ID user yang sedang diedit.
+  // Jika null berarti sedang dalam mode tambah data.
+  int? editingUserId;
 
   @override
   void initState() {
@@ -260,7 +321,6 @@ class _Tugas12State extends State<Tugas12> {
     usersFuture = DatabaseHelper.instance.getUsers();
   }
 
-
   // Method untuk menyimpan data user.
   Future<void> simpanData() async {
 
@@ -269,7 +329,59 @@ class _Tugas12State extends State<Tugas12> {
       return;
     }
 
+    if (editingUserId != null) {
 
+      // Membuat object User dengan ID lama.
+      final user = User(
+
+        // ID tetap menggunakan ID data sebelumnya.
+        id: editingUserId,
+
+        // Mengambil nama baru dari controller.
+        nama: namaController.text,
+
+        // Mengambil email baru dari controller.
+        email: emailController.text,
+
+        // Mengambil nomor HP baru dari controller.
+        nomorHp: nomorHpController.text,
+
+        // Mengambil password baru dari controller.
+        password: passwordController.text,
+
+        // Mengambil asal kota baru dari controller.
+        asalKota: asalKotaController.text,
+      );
+
+
+      // Memperbarui data berdasarkan ID.
+      await DatabaseHelper.instance.updateUser(user);
+
+
+      // Mengambil kembali data terbaru dari database.
+      usersFuture = DatabaseHelper.instance.getUsers();
+
+
+      // Mengosongkan form.
+      _clearForm();
+
+
+      // Memperbarui tampilan.
+      setState(() {});
+
+
+      // Menampilkan pesan berhasil update.
+      if (mounted) {
+        ScaffoldMessenger.of(this.context).showSnackBar(
+          const SnackBar(
+            content: Text('Data berhasil diperbarui'),
+          ),
+        );
+      }
+
+      // Menghentikan proses agar tidak menjalankan insert.
+      return;
+    }
     // Membuat object User dari data yang dimasukkan.
     final user = User(
 
@@ -298,12 +410,8 @@ class _Tugas12State extends State<Tugas12> {
     usersFuture = DatabaseHelper.instance.getUsers();
 
 
-    // Mengosongkan input setelah berhasil disimpan.
-    namaController.clear();
-    emailController.clear();
-    nomorHpController.clear();
-    passwordController.clear();
-    asalKotaController.clear();
+    // Mengosongkan form.
+    _clearForm();
 
 
     // Memperbarui tampilan.
@@ -320,6 +428,151 @@ class _Tugas12State extends State<Tugas12> {
     }
   }
 
+  // Method untuk mengosongkan semua input.
+  void _clearForm() {
+
+    // Mengosongkan nama.
+    namaController.clear();
+
+    // Mengosongkan email.
+    emailController.clear();
+
+    // Mengosongkan nomor HP.
+    nomorHpController.clear();
+
+    // Mengosongkan password.
+    passwordController.clear();
+
+    // Mengosongkan asal kota.
+    asalKotaController.clear();
+
+    // Mengubah mode menjadi tambah data.
+    editingUserId = null;
+  }
+  // Method untuk mengisi form dengan data user yang dipilih.
+  void editUser(User user) {
+
+    // Menyimpan ID user yang sedang diedit.
+    editingUserId = user.id;
+
+
+    // Mengisi input nama dengan data lama.
+    namaController.text = user.nama;
+
+    // Mengisi input email dengan data lama.
+    emailController.text = user.email;
+
+    // Mengisi input nomor HP dengan data lama.
+    nomorHpController.text = user.nomorHp;
+
+    // Mengisi input password dengan data lama.
+    passwordController.text = user.password;
+
+    // Mengisi input asal kota dengan data lama.
+    asalKotaController.text = user.asalKota;
+
+
+    // Memperbarui tampilan agar tombol berubah menjadi Update.
+    setState(() {});
+
+
+    // Scroll ke bagian atas agar form terlihat.
+    // Karena form berada di atas daftar.
+    Scrollable.ensureVisible(
+      _formKey.currentContext!,
+      duration: const Duration(milliseconds: 300),
+    );
+  }
+
+  // Method untuk menampilkan dialog konfirmasi hapus.
+  Future<void> konfirmasiHapus(User user) async {
+
+    // Menampilkan AlertDialog.
+    final bool? hasil = await showDialog<bool>(
+
+      // Context halaman saat ini.
+      context: this.context,
+
+      // Builder untuk membuat isi dialog.
+      builder: (context) {
+
+        // Mengembalikan AlertDialog.
+        return AlertDialog(
+
+          // Judul dialog.
+          title: const Text('Konfirmasi Hapus'),
+
+          // Isi pesan konfirmasi.
+          content: Text(
+            'Apakah Anda yakin ingin menghapus data ${user.nama}?',
+          ),
+
+          // Tombol aksi.
+          actions: [
+
+            // Tombol Batal.
+            TextButton(
+
+              // Ketika ditekan, tutup dialog
+              // dan kirim nilai false.
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+
+              // Tulisan tombol.
+              child: const Text('Batal'),
+            ),
+
+
+            // Tombol Ya.
+            TextButton(
+
+              // Ketika ditekan, tutup dialog
+              // dan kirim nilai true.
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+
+              // Tulisan tombol.
+              child: const Text('Ya, Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+
+    // Jika user memilih Ya,
+    // maka lakukan proses hapus.
+    if (hasil == true) {
+
+      // Memastikan ID tidak null.
+      if (user.id != null) {
+
+        // Menghapus data berdasarkan ID.
+        await DatabaseHelper.instance.deleteUser(user.id!);
+
+
+        // Mengambil data terbaru dari database.
+        usersFuture = DatabaseHelper.instance.getUsers();
+
+
+        // Memperbarui tampilan secara instan.
+        setState(() {});
+
+
+        // Menampilkan SnackBar.
+        if (mounted) {
+          ScaffoldMessenger.of(this.context).showSnackBar(
+            
+            const SnackBar(
+              content: Text('Data berhasil dihapus'),
+            ),
+          );
+        }
+      }
+    }
+  }
   @override
   void dispose() {
 
@@ -341,7 +594,6 @@ class _Tugas12State extends State<Tugas12> {
     // Memanggil dispose dari parent.
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
 
@@ -366,7 +618,9 @@ class _Tugas12State extends State<Tugas12> {
         // Column digunakan untuk menyusun widget
         // dari atas ke bawah.
         child: Column(
+
           children: [
+
             Form(
 
               // Menghubungkan Form dengan GlobalKey.
@@ -374,6 +628,7 @@ class _Tugas12State extends State<Tugas12> {
 
               // Column untuk input form.
               child: Column(
+
                 children: [
 
                   // Input nama.
@@ -400,6 +655,7 @@ class _Tugas12State extends State<Tugas12> {
                       return null;
                     },
                   ),
+
 
                   // Memberikan jarak antar input.
                   const SizedBox(height: 12),
@@ -438,6 +694,7 @@ class _Tugas12State extends State<Tugas12> {
                     },
                   ),
 
+
                   // Jarak.
                   const SizedBox(height: 12),
 
@@ -469,6 +726,7 @@ class _Tugas12State extends State<Tugas12> {
                       return null;
                     },
                   ),
+
 
                   // Jarak.
                   const SizedBox(height: 12),
@@ -507,6 +765,7 @@ class _Tugas12State extends State<Tugas12> {
                     },
                   ),
 
+
                   // Jarak.
                   const SizedBox(height: 12),
 
@@ -536,31 +795,62 @@ class _Tugas12State extends State<Tugas12> {
                     },
                   ),
 
+
                   // Jarak.
                   const SizedBox(height: 16),
 
 
-                  // Tombol simpan.
+                  // Tombol simpan/update.
                   SizedBox(
 
-                    // Membuat tombol memenuhi lebar yang tersedia.
+                    // Membuat tombol memenuhi lebar.
                     width: double.infinity,
 
-                    // ElevatedButton merupakan tombol dengan efek elevation.
+                    // ElevatedButton merupakan tombol.
                     child: ElevatedButton(
 
-                      // Ketika tombol ditekan,
+                      // Ketika ditekan,
                       // jalankan method simpanData().
                       onPressed: simpanData,
 
-                      // Text pada tombol.
-                      child: const Text('Daftar'),
+                      // Tulisan tombol berubah
+                      // sesuai mode tambah/edit.
+                      child: Text(
+                        editingUserId == null
+                            ? 'Daftar'
+                            : 'Update Data',
+                      ),
                     ),
                   ),
+
+
+                  // Jika sedang edit,
+                  // tampilkan tombol batal.
+                  if (editingUserId != null) ...[
+
+                    const SizedBox(height: 8),
+
+                    SizedBox(
+                      width: double.infinity,
+
+                      child: OutlinedButton(
+
+                        // Ketika ditekan,
+                        // kosongkan form dan batalkan edit.
+                        onPressed: () {
+
+                          _clearForm();
+
+                          setState(() {});
+                        },
+
+                        child: const Text('Batal Edit'),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-
 
             // Jarak antara form dan daftar.
             const SizedBox(height: 24),
@@ -568,9 +858,16 @@ class _Tugas12State extends State<Tugas12> {
 
             // Judul daftar user.
             const Align(
+
+              // Posisi teks di sebelah kiri.
               alignment: Alignment.centerLeft,
+
               child: Text(
+
+                // Judul.
                 'Data Peserta Terdaftar',
+
+                // Style teks.
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -622,12 +919,15 @@ class _Tugas12State extends State<Tugas12> {
                 if (users.isEmpty) {
 
                   return const Padding(
+
                     padding: EdgeInsets.all(20),
+
                     child: Text(
                       'Belum ada peserta yang terdaftar.',
                     ),
                   );
                 }
+
 
                 // ListView.builder digunakan untuk
                 // menampilkan daftar user secara dinamis.
@@ -638,7 +938,8 @@ class _Tugas12State extends State<Tugas12> {
                   shrinkWrap: true,
 
                   // Menonaktifkan scroll ListView sendiri.
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics:
+                      const NeverScrollableScrollPhysics(),
 
                   // Jumlah data user.
                   itemCount: users.length,
@@ -655,7 +956,8 @@ class _Tugas12State extends State<Tugas12> {
                     return Card(
 
                       // Memberikan jarak antar Card.
-                      margin: const EdgeInsets.only(bottom: 10),
+                      margin:
+                          const EdgeInsets.only(bottom: 10),
 
                       // ListTile membuat tampilan data
                       // menjadi lebih sederhana.
@@ -666,19 +968,65 @@ class _Tugas12State extends State<Tugas12> {
                           child: Icon(Icons.person),
                         ),
 
+
                         // Menampilkan nama user.
                         title: Text(
+
                           user.nama,
+
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+
 
                         // Menampilkan informasi user.
                         subtitle: Text(
                           'Email: ${user.email}\n'
                           'No. HP: ${user.nomorHp}\n'
                           'Kota: ${user.asalKota}',
+                        ),
+
+                        trailing: Row(
+
+                          // Agar ukuran Row mengikuti isi.
+                          mainAxisSize: MainAxisSize.min,
+
+                          children: [
+
+                            // Tombol Edit.
+                            IconButton(
+
+                              // Icon pensil.
+                              icon: const Icon(Icons.edit),
+
+                              // Ketika ditekan,
+                              // kirim data user ke form.
+                              onPressed: () {
+                                editUser(user);
+                              },
+
+                              // Tooltip ketika diarahkan mouse.
+                              tooltip: 'Edit',
+                            ),
+
+
+                            // Tombol Delete.
+                            IconButton(
+
+                              // Icon tempat sampah.
+                              icon: const Icon(Icons.delete),
+
+                              // Ketika ditekan,
+                              // tampilkan konfirmasi hapus.
+                              onPressed: () {
+                                konfirmasiHapus(user);
+                              },
+
+                              // Tooltip.
+                              tooltip: 'Hapus',
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -692,4 +1040,3 @@ class _Tugas12State extends State<Tugas12> {
     );
   }
 }
-

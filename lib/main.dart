@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:timycampus/Pages/login_screen.dart';
+import 'package:timycampus/Pages/tugas12.dart';
+import 'package:timycampus/Pages/tugas13.dart';
 import 'package:timycampus/Pages/tugas7.dart';
 import 'package:timycampus/Pages/tugas8.dart';
 import 'package:timycampus/Pages/tugas9.dart';
@@ -41,7 +43,7 @@ class MyApp extends StatelessWidget {
       title: 'TimiCampus',
 
       // Halaman pertama aplikasi.
-      home: const Tugas11(),
+      home: const Tugas12(),
     );
   }
 }
