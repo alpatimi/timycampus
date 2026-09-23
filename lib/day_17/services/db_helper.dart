@@ -1,38 +1,7 @@
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
-
-// class DBHelper {
-//   static final DBHelper _instance = DBHelper._internal();
-//   factory DBHelper() => _instance;
-
-//   DBHelper._internal();
-//   static Database? _database;
-
-//   Future<Database> get database async {
-//     if (_database != null) return _database!;
-//     _database = await _initDB();
-//     return _database!;
-//   }
-
-//   Future<Database> _initDB() async {
-//     final dbPath = await getDatabasesPath();
-//     final path = join(dbPath, 'ppkdju.db');
-
-//     return await openDatabase(
-//       path,
-//       version: 1,
-//       onCreate: (db, version) async {
-//         await db.execute('''
-//           CREATE TABLE users (
-//           id INTEGER PRIMARY KEY AUTOINCREMENT, 
-//           email TEXT UNIQUE, 
-//           password TEXT
-//           )
-//           ''');
-//       },
-//     );
-//   }
-// }
+import 'package:timycampus/day_17/models/user_model_sql.dart';
 
 /// ============================================================================
 /// SERVICE / HELPER: DBHelper (Database Helper)
@@ -104,7 +73,7 @@ class DBHelper {
       await db.insert('users', pengguna.toMap());
       return true;
     } catch (e) {
-      log('Error saat registerUser: ${e.toString()}');
+      print('Error saat updateUser: ${e.toString()}');
       return false;
     }
   }
@@ -174,7 +143,7 @@ class DBHelper {
       // count adalah jumlah baris yang berhasil diubah di database
       return count > 0;
     } catch (e) {
-      log('Error saat updateUser: ${e.toString()}');
+      print('Error saat updateUser: ${e.toString()}');
       return false;
     }
   }

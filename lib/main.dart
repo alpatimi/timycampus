@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timycampus/Pages/belajar_tipis2.dart';
 import 'package:timycampus/Pages/login_screen.dart';
 import 'package:timycampus/Pages/tugas12.dart';
 import 'package:timycampus/Pages/tugas13.dart';
@@ -9,6 +10,8 @@ import 'package:timycampus/Pages/tugas10.dart';
 import 'package:timycampus/Pages/tugas11.dart';
 import 'package:timycampus/Pages/preference_handler.dart';
 import 'package:timycampus/Pages/latihan_bottom_navigator.dart';
+import 'package:timycampus/Pages/tugas_14/tugas14.dart';
+import 'package:timycampus/day_19/views/post_list_views.dart';
 
 void main() async {
 
@@ -43,7 +46,7 @@ class MyApp extends StatelessWidget {
       title: 'TimiCampus',
 
       // Halaman pertama aplikasi.
-      home: const Tugas12(),
+      home: const Tugas14Page(),     
     );
   }
 }
