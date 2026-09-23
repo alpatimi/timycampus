@@ -3,301 +3,428 @@ import 'package:dio/dio.dart';
 
 import 'model/cocktail_model.dart';
 import 'services/cocktail_service.dart';
+import 'cocktail_detail_page.dart';
 
-// Class halaman utama untuk Tugas 14.
-// StatefulWidget digunakan karena halaman ini akan mengambil data
-// secara asynchronous dari API.
+// ============================================================
+// HALAMAN UTAMA TUGAS 14
+// ============================================================
+
 class Tugas14Page extends StatefulWidget {
-  // Constructor dari Tugas14Page.
+  // Constructor Tugas14Page.
   const Tugas14Page({super.key});
 
-  // Membuat State dari Tugas14Page.
   @override
   State<Tugas14Page> createState() => _Tugas14PageState();
 }
 
-// State dari Tugas14Page.
+// ============================================================
+// STATE TUGAS 14
+// ============================================================
+
 class _Tugas14PageState extends State<Tugas14Page> {
-  // Membuat object service untuk mengambil data dari API.
+  // Service untuk mengambil data dari API.
   final CocktailService _cocktailService = CocktailService(Dio());
+
+  // Menyimpan Future data cocktail.
+  late Future<CocktailModel> _cocktailFuture;
+
+  // Controller untuk Search Bar.
+  final TextEditingController _searchController =
+      TextEditingController();
+
+  // Menyimpan kata pencarian.
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Mengambil data pertama kali ketika halaman dibuka.
+    _loadCocktails();
+  }
+
+  // ============================================================
+  // METHOD MENGAMBIL DATA
+  // ============================================================
+
+  void _loadCocktails() {
+    setState(() {
+      _cocktailFuture = _cocktailService.fetchData('margarita');
+    });
+  }
+
+  // ============================================================
+  // METHOD REFRESH
+  // ============================================================
+
+  Future<void> _refreshCocktails() async {
+    setState(() {
+      _cocktailFuture = _cocktailService.fetchData('margarita');
+    });
+
+    // Menunggu proses API selesai.
+    await _cocktailFuture;
+  }
+
+  @override
+  void dispose() {
+    // Menghapus controller ketika halaman ditutup.
+    _searchController.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold digunakan sebagai struktur dasar halaman.
     return Scaffold(
-      // AppBar adalah bagian atas halaman.
-      appBar: AppBar(
-        // Judul halaman.
-        title: const Text('Cocktail List'),
+      // ========================================================
+      // APP BAR
+      // ========================================================
 
-        // Membuat judul berada di tengah.
+      appBar: AppBar(
+        title: const Text('Cocktail List'),
         centerTitle: true,
       ),
 
-      // FutureBuilder digunakan untuk menangani proses asynchronous.
-      //
-      // Saat API masih loading:
-      // akan menampilkan CircularProgressIndicator.
-      //
-      // Jika terjadi error:
-      // akan menampilkan pesan error.
-      //
-      // Jika berhasil:
-      // akan menampilkan ListView.builder.
-      body: FutureBuilder<CocktailModel>(
-        // Memanggil method fetchData() dari service.
-        future: _cocktailService.fetchData('margarita'),
+      // ========================================================
+      // BODY
+      // ========================================================
 
-        // Builder akan dipanggil setiap kali kondisi Future berubah.
-        builder: (BuildContext context, AsyncSnapshot<CocktailModel> snapshot) {
-          // ----------------------------------------------------------
-          // KONDISI 1: LOADING
-          // ----------------------------------------------------------
-          //
-          // Jika data belum selesai diambil dari API,
-          // snapshot.connectionState akan bernilai waiting.
+      body: FutureBuilder<CocktailModel>(
+        // Future yang digunakan untuk mengambil data.
+        future: _cocktailFuture,
+
+        builder: (
+          BuildContext context,
+          AsyncSnapshot<CocktailModel> snapshot,
+        ) {
+          // ====================================================
+          // LOADING
+          // ====================================================
+
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // Center digunakan supaya loading berada di tengah layar.
             return const Center(
-              // CircularProgressIndicator adalah loading indicator.
               child: CircularProgressIndicator(),
             );
           }
 
-          // ----------------------------------------------------------
-          // KONDISI 2: ERROR
-          // ----------------------------------------------------------
-          //
-          // Jika terjadi error ketika mengambil data dari API,
-          // snapshot.hasError akan bernilai true.
+          // ====================================================
+          // ERROR
+          // ====================================================
+
           if (snapshot.hasError) {
-            // Menampilkan pesan error kepada user.
             return Center(
-              // Column digunakan untuk menampilkan beberapa widget
-              // secara vertikal.
               child: Column(
-                // Membuat isi berada di tengah secara vertikal.
                 mainAxisAlignment: MainAxisAlignment.center,
-
                 children: [
-                  // Icon error.
-                  const Icon(Icons.error_outline, size: 50, color: Colors.red),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 50,
+                    color: Colors.red,
+                  ),
 
-                  // Memberikan jarak antara icon dan text.
                   const SizedBox(height: 10),
 
-                  // Menampilkan pesan error.
                   Text(
                     'Terjadi kesalahan:\n${snapshot.error}',
                     textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  ElevatedButton(
+                    onPressed: _loadCocktails,
+                    child: const Text('Coba Lagi'),
                   ),
                 ],
               ),
             );
           }
 
-          // ----------------------------------------------------------
-          // KONDISI 3: DATA BERHASIL
-          // ----------------------------------------------------------
-          //
-          // Jika data berhasil diambil,
-          // kita ambil data dari snapshot.
+          // ====================================================
+          // AMBIL DATA
+          // ====================================================
+
           final cocktails = snapshot.data?.drinks ?? [];
 
-          // Jika API berhasil tetapi tidak mengembalikan data,
-          // tampilkan pesan bahwa data kosong.
-          if (cocktails.isEmpty) {
-            return const Center(child: Text('Data cocktail tidak ditemukan.'));
-          }
+          // ====================================================
+          // SEARCH FILTER
+          // ====================================================
 
-          // ----------------------------------------------------------
-          // MENAMPILKAN DATA
-          // ----------------------------------------------------------
-          //
-          // ListView.builder digunakan untuk membuat daftar
-          // cocktail secara dinamis berdasarkan jumlah data dari API.
-          return ListView.builder(
-            // Jumlah item yang akan dibuat.
-            itemCount: cocktails.length,
+          final filteredCocktails = cocktails.where((cocktail) {
+            final name =
+                cocktail.strDrink?.toLowerCase() ?? '';
 
-            // Builder untuk setiap item dalam list.
-            itemBuilder: (BuildContext context, int index) {
-              // Mengambil satu data cocktail berdasarkan index.
-              final Cocktail cocktail = cocktails[index];
+            final category =
+                cocktail.strCategory?.toLowerCase() ?? '';
 
-              // Card digunakan untuk membuat tampilan
-              // setiap cocktail seperti sebuah kartu.
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            final query = _searchQuery.toLowerCase();
 
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            return name.contains(query) ||
+                category.contains(query);
+          }).toList();
 
-                child: InkWell(
-                  // Ketika Card ditekan
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          // Judul menggunakan nama cocktail
-                          title: Text(cocktail.strDrink ?? 'Unknown'),
+          // ====================================================
+          // REFRESH INDICATOR
+          // ====================================================
 
-                          // Isi detail
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Gambar cocktail
-                              if (cocktail.strDrinkThumb != null &&
-                                  cocktail.strDrinkThumb!.isNotEmpty)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    cocktail.strDrinkThumb!,
-                                    width: 220,
-                                    height: 180,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
+          return RefreshIndicator(
+            // Ketika user melakukan pull down.
+            onRefresh: _refreshCocktails,
 
-                              const SizedBox(height: 12),
+            child: Column(
+              children: [
+                // ==================================================
+                // SEARCH BAR
+                // ==================================================
 
-                              // Kategori
-                              Text(
-                                'Kategori: ${cocktail.strCategory ?? 'Tidak tersedia'}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
 
-                              const SizedBox(height: 8),
+                  child: TextField(
+                    // Controller Search Bar.
+                    controller: _searchController,
 
-                              // Jenis minuman
-                              Text(
-                                'Tipe: ${cocktail.strAlcoholic ?? 'Tidak tersedia'}',
-                              ),
+                    // Ketika user mengetik.
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
 
-                              const SizedBox(height: 8),
+                    decoration: InputDecoration(
+                      hintText: 'Cari cocktail...',
 
-                              // Jenis gelas
-                              Text(
-                                'Gelas: ${cocktail.strGlass ?? 'Tidak tersedia'}',
-                              ),
-                            ],
-                          ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                      ),
 
-                          // Tombol tutup
-                          actions: [
-                            TextButton(
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+
                               onPressed: () {
-                                Navigator.pop(context);
+                                _searchController.clear();
+
+                                setState(() {
+                                  _searchQuery = '';
+                                });
                               },
-                              child: const Text('Tutup'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
+                            )
+                          : null,
 
-                  // ====================================================
-                  // INI YANG TADI HILANG
-                  // ====================================================
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-
-                      children: [
-                        // ==========================================
-                        // GAMBAR COCKTAIL
-                        // ==========================================
-                        if (cocktail.strDrinkThumb != null &&
-                            cocktail.strDrinkThumb!.isNotEmpty)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-
-                            child: Image.network(
-                              cocktail.strDrinkThumb!,
-
-                              width: 100,
-                              height: 100,
-
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        else
-                          Container(
-                            width: 100,
-                            height: 100,
-
-                            color: Colors.grey.shade200,
-
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              size: 40,
-                            ),
-                          ),
-
-                        const SizedBox(width: 12),
-
-                        // ==========================================
-                        // INFORMASI COCKTAIL
-                        // ==========================================
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-
-                            children: [
-                              // Nama cocktail
-                              Text(
-                                cocktail.strDrink ?? 'Unknown',
-
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              // Kategori
-                              Text(
-                                cocktail.strCategory ??
-                                    'Kategori tidak tersedia',
-
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-
-                              const SizedBox(height: 4),
-
-                              // Tipe alkohol
-                              Text(
-                                cocktail.strAlcoholic ?? 'Tipe tidak tersedia',
-
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
-              );
-            },
+
+                // ==================================================
+                // DATA KOSONG
+                // ==================================================
+
+                if (filteredCocktails.isEmpty)
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        'Cocktail tidak ditemukan.',
+                      ),
+                    ),
+                  )
+
+                // ==================================================
+                // LIST DATA
+                // ==================================================
+
+                else
+                  Expanded(
+                    child: ListView.builder(
+                      // Jumlah data setelah difilter.
+                      itemCount: filteredCocktails.length,
+
+                      itemBuilder: (
+                        BuildContext context,
+                        int index,
+                      ) {
+                        // Mengambil data cocktail.
+                        final Cocktail cocktail =
+                            filteredCocktails[index];
+
+                        // ==================================================
+                        // CARD
+                        // ==================================================
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(12),
+                          ),
+
+                          child: InkWell(
+                            borderRadius:
+                                BorderRadius.circular(12),
+
+                            // ==================================================
+                            // PINDAH KE DETAIL PAGE
+                            // ==================================================
+
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      CocktailDetailPage(
+                                    cocktail: cocktail,
+                                  ),
+                                ),
+                              );
+                            },
+
+                            // ==================================================
+                            // ISI CARD
+                            // ==================================================
+
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.all(12),
+
+                              child: Row(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+
+                                children: [
+                                  // ==================================================
+                                  // GAMBAR
+                                  // ==================================================
+
+                                  if (cocktail.strDrinkThumb !=
+                                          null &&
+                                      cocktail.strDrinkThumb!
+                                          .isNotEmpty)
+                                    ClipRRect(
+                                      borderRadius:
+                                          BorderRadius.circular(10),
+
+                                      child: Image.network(
+                                        cocktail.strDrinkThumb!,
+                                        width: 100,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  else
+                                    Container(
+                                      width: 100,
+                                      height: 100,
+
+                                      color:
+                                          Colors.grey.shade200,
+
+                                      child: const Icon(
+                                        Icons
+                                            .image_not_supported,
+                                        size: 40,
+                                      ),
+                                    ),
+
+                                  const SizedBox(width: 12),
+
+                                  // ==================================================
+                                  // INFORMASI
+                                  // ==================================================
+
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+
+                                      children: [
+                                        // Nama cocktail.
+                                        Text(
+                                          cocktail.strDrink ??
+                                              'Unknown',
+
+                                          style:
+                                              const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight:
+                                                FontWeight.bold,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 8),
+
+                                        // Kategori.
+                                        Text(
+                                          cocktail.strCategory ??
+                                              'Kategori tidak tersedia',
+
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors
+                                                .grey.shade700,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 4),
+
+                                        // Tipe alkohol.
+                                        Text(
+                                          cocktail.strAlcoholic ??
+                                              'Tipe tidak tersedia',
+
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors
+                                                .grey.shade600,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 8),
+
+                                        // Petunjuk bahwa item bisa diklik.
+                                        const Row(
+                                          children: [
+                                            Icon(
+                                              Icons
+                                                  .arrow_forward_ios,
+                                              size: 13,
+                                            ),
+
+                                            SizedBox(width: 4),
+
+                                            Text(
+                                              'Lihat detail',
+                                              style:
+                                                  TextStyle(
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
           );
         },
       ),
     );
   }
 }
+
