@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:timycampus/Pages/preference_handler.dart';
+import 'package:timycampus/Pages/tugas11.dart';
+import 'package:timycampus/Pages/tugas13.dart';
 
 import 'model/cocktail_model.dart';
 import 'services/cocktail_service.dart';
 import 'cocktail_detail_page.dart';
-
-// ============================================================
-// HALAMAN UTAMA TUGAS 14
-// ============================================================
 
 class Tugas14Page extends StatefulWidget {
   // Constructor Tugas14Page.
@@ -17,10 +16,6 @@ class Tugas14Page extends StatefulWidget {
   State<Tugas14Page> createState() => _Tugas14PageState();
 }
 
-// ============================================================
-// STATE TUGAS 14
-// ============================================================
-
 class _Tugas14PageState extends State<Tugas14Page> {
   // Service untuk mengambil data dari API.
   final CocktailService _cocktailService = CocktailService(Dio());
@@ -29,8 +24,7 @@ class _Tugas14PageState extends State<Tugas14Page> {
   late Future<CocktailModel> _cocktailFuture;
 
   // Controller untuk Search Bar.
-  final TextEditingController _searchController =
-      TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   // Menyimpan kata pencarian.
   String _searchQuery = '';
@@ -43,19 +37,11 @@ class _Tugas14PageState extends State<Tugas14Page> {
     _loadCocktails();
   }
 
-  // ============================================================
-  // METHOD MENGAMBIL DATA
-  // ============================================================
-
   void _loadCocktails() {
     setState(() {
       _cocktailFuture = _cocktailService.fetchData('margarita');
     });
   }
-
-  // ============================================================
-  // METHOD REFRESH
-  // ============================================================
 
   Future<void> _refreshCocktails() async {
     setState(() {
@@ -77,35 +63,39 @@ class _Tugas14PageState extends State<Tugas14Page> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ========================================================
-      // APP BAR
-      // ========================================================
-
       appBar: AppBar(
-        title: const Text('Cocktail List'),
+        title: const Text('Toko Cocktail'),
         centerTitle: true,
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            //Aksi ketika logout ditekan
+            onPressed: () async {
+              // Mengubah status login menjadi false
+              await PreferenceHandler.setLogin(false);
+              //cek apakah halaman masih aktif
+              if (!context.mounted) return;
+
+              // Kembali ke LoginScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const LoginScreen(showLogoutMessage: true),
+                ),
+              );
+            },
+          ),
+        ],
       ),
-
-      // ========================================================
-      // BODY
-      // ========================================================
-
       body: FutureBuilder<CocktailModel>(
         // Future yang digunakan untuk mengambil data.
         future: _cocktailFuture,
 
-        builder: (
-          BuildContext context,
-          AsyncSnapshot<CocktailModel> snapshot,
-        ) {
-          // ====================================================
-          // LOADING
-          // ====================================================
-
+        builder: (BuildContext context, AsyncSnapshot<CocktailModel> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           // ====================================================
@@ -117,11 +107,7 @@ class _Tugas14PageState extends State<Tugas14Page> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 50,
-                    color: Colors.red,
-                  ),
+                  const Icon(Icons.error_outline, size: 50, color: Colors.red),
 
                   const SizedBox(height: 10),
 
@@ -152,16 +138,13 @@ class _Tugas14PageState extends State<Tugas14Page> {
           // ====================================================
 
           final filteredCocktails = cocktails.where((cocktail) {
-            final name =
-                cocktail.strDrink?.toLowerCase() ?? '';
+            final name = cocktail.strDrink?.toLowerCase() ?? '';
 
-            final category =
-                cocktail.strCategory?.toLowerCase() ?? '';
+            final category = cocktail.strCategory?.toLowerCase() ?? '';
 
             final query = _searchQuery.toLowerCase();
 
-            return name.contains(query) ||
-                category.contains(query);
+            return name.contains(query) || category.contains(query);
           }).toList();
 
           // ====================================================
@@ -195,9 +178,7 @@ class _Tugas14PageState extends State<Tugas14Page> {
                     decoration: InputDecoration(
                       hintText: 'Cari cocktail...',
 
-                      prefixIcon: const Icon(
-                        Icons.search,
-                      ),
+                      prefixIcon: const Icon(Icons.search),
 
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -223,33 +204,22 @@ class _Tugas14PageState extends State<Tugas14Page> {
                 // ==================================================
                 // DATA KOSONG
                 // ==================================================
-
                 if (filteredCocktails.isEmpty)
                   const Expanded(
-                    child: Center(
-                      child: Text(
-                        'Cocktail tidak ditemukan.',
-                      ),
-                    ),
+                    child: Center(child: Text('Cocktail tidak ditemukan.')),
                   )
-
                 // ==================================================
                 // LIST DATA
                 // ==================================================
-
                 else
                   Expanded(
                     child: ListView.builder(
                       // Jumlah data setelah difilter.
                       itemCount: filteredCocktails.length,
 
-                      itemBuilder: (
-                        BuildContext context,
-                        int index,
-                      ) {
+                      itemBuilder: (BuildContext context, int index) {
                         // Mengambil data cocktail.
-                        final Cocktail cocktail =
-                            filteredCocktails[index];
+                        final Cocktail cocktail = filteredCocktails[index];
 
                         // ==================================================
                         // CARD
@@ -262,26 +232,21 @@ class _Tugas14PageState extends State<Tugas14Page> {
                           ),
 
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12),
                           ),
 
                           child: InkWell(
-                            borderRadius:
-                                BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12),
 
                             // ==================================================
                             // PINDAH KE DETAIL PAGE
                             // ==================================================
-
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      CocktailDetailPage(
-                                    cocktail: cocktail,
-                                  ),
+                                      CocktailDetailPage(cocktail: cocktail),
                                 ),
                               );
                             },
@@ -289,27 +254,21 @@ class _Tugas14PageState extends State<Tugas14Page> {
                             // ==================================================
                             // ISI CARD
                             // ==================================================
-
                             child: Padding(
-                              padding:
-                                  const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(12),
 
                               child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
 
                                 children: [
                                   // ==================================================
                                   // GAMBAR
                                   // ==================================================
 
-                                  if (cocktail.strDrinkThumb !=
-                                          null &&
-                                      cocktail.strDrinkThumb!
-                                          .isNotEmpty)
+                                  if (cocktail.strDrinkThumb != null &&
+                                      cocktail.strDrinkThumb!.isNotEmpty)
                                     ClipRRect(
-                                      borderRadius:
-                                          BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(10),
 
                                       child: Image.network(
                                         cocktail.strDrinkThumb!,
@@ -323,12 +282,10 @@ class _Tugas14PageState extends State<Tugas14Page> {
                                       width: 100,
                                       height: 100,
 
-                                      color:
-                                          Colors.grey.shade200,
+                                      color: Colors.grey.shade200,
 
                                       child: const Icon(
-                                        Icons
-                                            .image_not_supported,
+                                        Icons.image_not_supported,
                                         size: 40,
                                       ),
                                     ),
@@ -338,7 +295,6 @@ class _Tugas14PageState extends State<Tugas14Page> {
                                   // ==================================================
                                   // INFORMASI
                                   // ==================================================
-
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -347,14 +303,11 @@ class _Tugas14PageState extends State<Tugas14Page> {
                                       children: [
                                         // Nama cocktail.
                                         Text(
-                                          cocktail.strDrink ??
-                                              'Unknown',
+                                          cocktail.strDrink ?? 'Unknown',
 
-                                          style:
-                                              const TextStyle(
+                                          style: const TextStyle(
                                             fontSize: 18,
-                                            fontWeight:
-                                                FontWeight.bold,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
 
@@ -367,8 +320,7 @@ class _Tugas14PageState extends State<Tugas14Page> {
 
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: Colors
-                                                .grey.shade700,
+                                            color: Colors.grey.shade700,
                                           ),
                                         ),
 
@@ -381,8 +333,7 @@ class _Tugas14PageState extends State<Tugas14Page> {
 
                                           style: TextStyle(
                                             fontSize: 13,
-                                            color: Colors
-                                                .grey.shade600,
+                                            color: Colors.grey.shade600,
                                           ),
                                         ),
 
@@ -392,8 +343,7 @@ class _Tugas14PageState extends State<Tugas14Page> {
                                         const Row(
                                           children: [
                                             Icon(
-                                              Icons
-                                                  .arrow_forward_ios,
+                                              Icons.arrow_forward_ios,
                                               size: 13,
                                             ),
 
@@ -401,10 +351,7 @@ class _Tugas14PageState extends State<Tugas14Page> {
 
                                             Text(
                                               'Lihat detail',
-                                              style:
-                                                  TextStyle(
-                                                fontSize: 12,
-                                              ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ],
                                         ),
@@ -427,4 +374,3 @@ class _Tugas14PageState extends State<Tugas14Page> {
     );
   }
 }
-

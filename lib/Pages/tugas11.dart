@@ -1,8 +1,8 @@
 // Mengimport package Flutter Material.
 import 'package:flutter/material.dart';
+import 'package:timycampus/Pages/tugas_14/tugas14.dart';
 
 // Mengimport PreferenceHandler dari file terpisah.
-// Sesuaikan path jika folder kamu berbeda.
 import 'preference_handler.dart';
 
 // Class utama yang akan dipanggil dari main.dart.
@@ -61,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+          builder: (context) => const Tugas14Page(),
         ),
       );
 
@@ -286,13 +286,10 @@ class HomeScreen extends StatelessWidget {
         actions: [
 
           IconButton(
-
             // Icon Logout.
             icon: const Icon(Icons.logout),
-
             // Aksi ketika Logout ditekan.
             onPressed: () async {
-
               // Mengubah status login menjadi false.
               await PreferenceHandler.setLogin(false);
 
